@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4 align-items-center">
+  <div class="col-md-6">
+    <h2>📇 All Contacts</h2>
+  </div>
+  <div class="col-md-6 text-end">
+    <div class="btn-group">
+      <a href="/export" class="btn btn-success"><i class="fas fa-file-excel"></i> Export Excel</a>
+      <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#importModal">
+        <i class="fas fa-file-import"></i> Import Excel
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  {% for contact in contacts %}
+  <div class="col-md-4 mb-3">
+    <div class="card h-100 contact-card shadow-sm">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <h5 class="card-title fw-bold">{{ contact.name }}</h5>
+          <i class="fas fa-star fa-lg cursor-pointer {{ 'bookmarked' if contact.is_bookmarked else 'not-bookmarked' }}"
+            onclick="toggleBookmark({{ contact.id }}, this)" style="cursor: pointer;"></i>
+        </div>
+
+        <hr>
+        <ul class="list-unstyled small">
+          {% for method in contact.methods %}
+          <li class="mb-1">
+            <span class="badge bg-secondary">{{ method.method_type }}</span> {{ method.value }}
+          </li>
+          {% else %}
+          <li class="text-muted">No contact info</li>
+          {% endfor %}
+        </ul>
+      </div>
+      <div class="card-footer bg-white border-top-0 text-end">
+        <a href="/edit/{{ contact.id }}" class="btn btn-sm btn-outline-primary">Edit</a>
+        <a href="/delete/{{ contact.id }}" class="btn btn-sm btn-outline-danger"
+          onclick="return confirm('Delete this contact?')">Delete</a>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="col-12 text-center py-5">
+    <p class="text-muted">No contacts found. Add one or Import from Excel!</p>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="modal fade" id="importModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form action="/import" method="post" enctype="multipart/form-data">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Import Contacts</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p>Select an .xlsx file with columns: <code>Name, Type, Value, Is Bookmarked</code></p>
+          <input type="file" name="file" class="form-control" required accept=".xlsx">
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Upload & Import</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  // 收藏功能 AJAX 实现
+  function toggleBookmark(id, element) {
+    fetch(`/bookmark/${id}`, {method: 'POST'})
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'success') {
+          if (data.is_bookmarked) {
+            element.classList.remove('not-bookmarked');
+            element.classList.add('bookmarked');
+          } else {
+            element.classList.remove('bookmarked');
+            element.classList.add('not-bookmarked');
+          }
+        }
+      });
+  }
+</script>
+{% endblock %}
